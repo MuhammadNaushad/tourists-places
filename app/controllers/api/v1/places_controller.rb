@@ -1,20 +1,20 @@
 class Api::V1::PlacesController < ApplicationController
-  before_action :find_place, only: [ :index, :new, :create, :show, :update, :destroy ]
+  before_action :find_place, only: [  :show, :update, :destroy ]
 
   def index
     @places = Place.all
- render json: {
-    status: true,
-    message: "Places fetched successfully",
-    data: @places.map do |place|
-      {
-        id: place.id,
-        name: place.name,
-        city: place.city,
-        country: place.country,
-        latitude: place.latitude,
-        longitude: place.longitude
-      }
+    render json: {
+        status: true,
+        message: "Places fetched successfully",
+        data: @places.map do |place|
+          {
+            id: place.id,
+            name: place.name,
+            city: place.city,
+            country: place.country,
+            latitude: place.latitude,
+            longitude: place.longitude
+          }
     end
   }
   end
@@ -31,33 +31,28 @@ class Api::V1::PlacesController < ApplicationController
   end
 
   def create
-    @place = Place.new(params[:place])
+    @place = Place.new(place_params)
     if @place.save
-      flash[:success] = "Place successfully created"
-      redirect_to @place
+     render json: @place, status: :ok
     else
-      flash[:error] = "Something went wrong"
-      render "new"
+      render json: { "errors": @place.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
   def update
-    if @place.update_attributes(params[:place])
-      flash[:success] = "Place was successfully updated"
-      redirect_to @place
+    if @place.update(place_params)
+      render json: @place
     else
-      flash[:error] = "Something went wrong"
-      render "edit"
+      render json: { "errors": @place.errors.full_messages }, status: :unprocessable_entity
+      # render "edit"
     end
   end
 
   def destroy
     if @place.destroy
-      flash[:success] = "Place was successfully deleted"
-      redirect_to @places_path
+      render json: { "status": true, "message": "Place deleted successfully" }, status: :ok
     else
-      flash[:error] = "Something went wrong"
-      redirect_to @places_path
+      render json: { "status": false, "message": "Something went wrong" }, status: :unprocessable_entity
     end
   end
 
@@ -65,5 +60,12 @@ class Api::V1::PlacesController < ApplicationController
 
     def find_place
       @place = Place.find(params[:id])
+
+    rescue ActiveRecord::RecordNotFound => e
+       render json: { status: false, message: e.message }, status: :not_found
+    end
+
+    def place_params
+      params.require(:place).permit(:name, :description, :city, :state, :country, :latitude, :longitude, :image_url)
     end
 end

@@ -1,55 +1,56 @@
 class Api::V1::BooksController < ApplicationController
-  before_action :find_book, except: [ :index, :new, :create ]
+  before_action :set_book, only: [ :show, :update, :destroy  ]
 
+  # GET /api/v1/books
   def index
-    @books = Book.all
-    render json: @books
+    books = Book.all
+    render json: books, status: :ok
   end
 
+  # GET /api/v1/books/:id
   def show
+    render json: @book, status: :ok
   end
 
-  def new
-    @book = Book.new
-  end
-
-  def edit
-  end
-
+  # POST /api/v1/books
   def create
-    @book = Book.new(params[:book])
-    if @book.save
-      flash[:success] = "Book successfully created"
-      redirect_to @book
+    book = Book.new(book_params)
+
+    if book.save
+      render json: book, status: :created
     else
-      flash[:error] = "Something went wrong"
-      render "new"
+      render json: { errors: book.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
+  # PUT /api/v1/books/:id
   def update
-    if @book.update_attributes(params[:book])
-      flash[:success] = "Book was successfully updated"
-      redirect_to @book
+    if @book.update(book_params)
+      render json: @book, status: :ok
     else
-      flash[:error] = "Something went wrong"
-      render "edit"
+      render json: { errors: @book.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
+  # DELETE /api/v1/books/:id
   def destroy
-    if @book.destroy
-      flash[:success] = "Book was successfully deleted"
-      redirect_to @books_path
-    else
-      flash[:error] = "Something went wrong"
-      redirect_to @books_path
-    end
+    @book.destroy
+    render json: { status: true, message: "Book deleted successfully" }, status: :ok
   end
 
   private
 
-    def find_book
-      @book = Book.find(params[:id])
+  # ✅ before_action method
+  def set_book
+    @book = Book.find_by(id: params[:id])
+
+    unless @book
+      render json: { status: false, message: "Book not found" }, status: :not_found
     end
+  end
+
+  # ✅ Strong params
+  def book_params
+    params.require(:book).permit(:name, :author, :publisher)
+  end
 end
