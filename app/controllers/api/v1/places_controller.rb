@@ -2,7 +2,9 @@ class Api::V1::PlacesController < ApplicationController
   before_action :find_place, only: [  :show, :update, :destroy ]
 
   def index
-    @places = Place.all
+    # @places = Place.all
+    @places= Place.includes(:images)
+    # include associated images in the JSON response
     render json: {
         status: true,
         message: "Places fetched successfully",
@@ -13,14 +15,20 @@ class Api::V1::PlacesController < ApplicationController
             city: place.city,
             country: place.country,
             latitude: place.latitude,
-            longitude: place.longitude
+            longitude: place.longitude,
+            images: place.images.map { |img|
+                          {
+                            id: img.id,
+                            url: img.url
+                          }
+                  }
           }
     end
   }
   end
 
   def show
-    render json: @place
+    render json: @place.as_json(include: { images: { only: [ :id, :url ] } })
   end
 
   def new
@@ -66,6 +74,7 @@ class Api::V1::PlacesController < ApplicationController
     end
 
     def place_params
-      params.require(:place).permit(:name, :description, :city, :state, :country, :latitude, :longitude, :image_url)
+      params.require(:place).permit(:name, :description, :city, :state, :country, :latitude, :longitude, :image_url,
+        images_attributes: [ :id, :url ])
     end
 end

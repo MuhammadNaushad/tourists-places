@@ -9,7 +9,7 @@
 #   end
 
 1000.times do |i|
-  Place.create(
+ place= Place.create(
     name: Faker::Address.street_address,
     description: Faker::Lorem.paragraph,
     latitude: Faker::Address.latitude,
@@ -18,12 +18,9 @@
     state: Faker::Address.state,
     country: Faker::Address.country,
   )
-  puts "Place #{i+1} created successfully!"
   10.times do |j|
-    Place.last.images.create(
+    place.images.create(
       url: Faker::LoremFlickr.image(size: "300x300", search_terms: [ 'nature' ]),
-      imageable_type: "Place",
-      imageable_id: Place.last.id
     )
     puts "Image #{j+1} for Place #{i+1} created successfully!"
   end
