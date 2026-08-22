@@ -8,7 +8,7 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-1000.times do |i|
+50.times do |i|
  place= Place.create(
     name: Faker::Address.street_address,
     description: Faker::Lorem.paragraph,
